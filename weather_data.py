@@ -1,14 +1,9 @@
 import requests
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
-api_key = os.getenv("API_KEY_OPW")
-print(api_key)
 
 class WeatherData:
     def __init__(self):
-        self.owm_api_key = api_key
+        self.owm_api_key = "c8537154778558a3c9e30c03f18a1672"
         self.base_url = 'http://api.openweathermap.org/data/2.5/weather'
 
     def processRequest(self, req):
