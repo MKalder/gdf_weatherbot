@@ -14,4 +14,5 @@ dist/
 # IDE settings
 .idea/
 .vscode/
+.env
 
