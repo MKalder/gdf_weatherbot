@@ -1,5 +1,5 @@
 gdf_weatherbot
 .env
-__pycache__
+__pycache__/
 .mypy_cache
-venv
+venv/
