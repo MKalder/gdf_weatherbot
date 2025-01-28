@@ -1,44 +1,62 @@
-import pyowm
+import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+api_key = os.getenv("API_KEY_OPW")
+print(api_key)
 
 class WeatherData:
     def __init__(self):
-        self.owmapikey='c8537154778558a3c9e30c03f18a1672'
-        self.owm = pyowm.OWM(self.owmapikey)
-    
-    '''
-    processing the request from dialogflow
-    
-    '''
-    def processRequest(self,req):
-        
+        self.owm_api_key = api_key
+        self.base_url = 'http://api.openweathermap.org/data/2.5/weather'
+
+    def processRequest(self, req):
         try:
             self.result = req.get("queryResult")
             self.parameters = self.result.get("parameters")
             self.city = self.parameters.get("geo-city")
+
             print(f"city : {self.city}")
             
-            self.observation = self.owm.weather_at_place(str(self.city))
-            
-            w = self.observation.get_weather()
-            self.latlon_res = self.observation.get_location()
-            
-            self.lat = str(self.latlon_res.get_lat())
-            self.lon = str(self.latlon_res.get_lon())
+            # API request to OpenWeatherMap
+            params = {
+                'q': self.city,
+                'appid': self.owm_api_key,
+                'units': 'metric'  # for Celsius temperatures
+            }
 
-            self.wind_res = w.get_wind()
-            self.wind_speed = str(self.wind_res.get('speed'))
+            response = requests.get(self.base_url, params=params)
+            if response.status_code != 200:
+                raise Exception("Failed to fetch weather data")
 
-            self.humidity = str(w.get_humidity())
+            data = response.json()
+            print(data)
 
-            self.celsius_result = w.get_temperature('celsius')
-            self.temp_min_celsius = str(self.celsius_result.get('temp_min'))
-            self.temp_max_celsius = str(self.celsius_result.get('temp_max'))
-            
-            speech = "Today's the weather in " + str(self.city) + ":" + " , " +"Humidity : " + str(self.humidity) +" , " + "Wind Speed : " +str(self.wind_speed)+ " , " + "minimum temperature : " + str(self.temp_min_celsius) + " , " + "maximum temperature : " + str(self.temp_max_celsius)
+            # Extract relevant weather information
+            # self.lat = data['coord']['lat']
+            # self.lon = data['coord']['lon']
+            self.condition = data['weather'][0]['main']
+            self.wind_speed = data['wind']['speed']
+            self.humidity = data['main']['humidity']
+            self.temp_min_celsius = data['main']['temp_min']
+            self.temp_max_celsius = data['main']['temp_max']
+
+            # Construct the speech output
+            speech = (
+                f"Today's the weather in {self.city}: "
+                f"Humidity: {self.humidity}% , "
+                f"Wind Speed: {self.wind_speed} m/s , "
+                f"Minimum Temperature: {self.temp_min_celsius}°C , "
+                f"Maximum Temperature: {self.temp_max_celsius}°C , "
+                f"Condition: {self.condition}" 
+            )
+
         except Exception as e:
-            print(e)
+            print(f"Error: {e}")
+            speech = "Sorry, I couldn't fetch the weather data at the moment. Please try again later."
 
         return {
             "fulfillmentText": speech,
             "displayText": speech
-            }
+        }
