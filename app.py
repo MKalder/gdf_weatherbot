@@ -1,10 +1,12 @@
 from flask import Flask
 from flask import Flask, request, make_response
-import os, json
+import json
 from flask_cors import CORS,cross_origin
 from weather_data import WeatherData
 
+weather_data = WeatherData()
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def index():
@@ -15,9 +17,9 @@ def index():
 @cross_origin()
 def webhook():
     req = request.get_json(silent=True, force=True)
-    print("Request:")
+    #print("Request:")
     
-    print(json.dumps(req))
+    #print(json.dumps(req))
 
     res = weather_data.processRequest(req)
 
@@ -27,8 +29,6 @@ def webhook():
     r.headers['Content-Type'] = 'application/json'
     return r
 
-weather_data = WeatherData()
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5050, debug=True)
 
